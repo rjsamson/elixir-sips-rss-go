@@ -1,8 +1,8 @@
 package downloader
 
 import (
-	"encoding/xml"
 	"fmt"
+	"github.com/rjsamson/rss"
 	"io"
 	"io/ioutil"
 	"log"
@@ -23,21 +23,6 @@ var config struct {
 	Episodes int
 }
 
-type enclosure struct {
-	Url string `xml:"url,attr"`
-}
-
-type item struct {
-	Title     string    `xml:"title"`
-	Enclosure enclosure `xml:"enclosure"`
-}
-
-type result struct {
-	XMLName xml.Name `xml:"rss"`
-	Title   string   `xml:"channel>title"`
-	Items   []item   `xml:"channel>item"`
-}
-
 func Download(username string, password string, episodes int) {
 	config.Username = username
 	config.Password = password
@@ -55,16 +40,14 @@ func Download(username string, password string, episodes int) {
 		return
 	}
 
-	var feed result
-
-	b, err := ioutil.ReadAll(resp.Body)
+	xmlData, err := ioutil.ReadAll(resp.Body)
 
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
 
-	err = xml.Unmarshal(b, &feed)
+	feed, err := rss.Parse(xmlData)
 
 	if err != nil {
 		log.Fatalln(err)
